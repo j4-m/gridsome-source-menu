@@ -1,0 +1,19 @@
+{
+  "name": "gridsome-source-menu",
+  "version": "0.0.0",
+  "description": "Generate hierarchical menus.",
+  "main": "index.js",
+  "author": "James Hall",
+  "repository": "https://github.com/iam-jam/gridsome-source-menu",
+  "keywords": [
+    "gridsome",
+    "gridsome-plugin",
+    "gridsome-source"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "globby": "^11.0.0"
+  }
+}
