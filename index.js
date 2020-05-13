@@ -7,15 +7,16 @@ const {
 } = require('gridsome/graphql')
 
 class MenuSource {
-  static defaultOptions () {
+  static defaultOptions() {
     return {
       path: '',
       menuTypeName: 'Menu',
       menuLinkTypeName: 'MenuLink',
+      contentTypes: []
     }
   }
 
-  constructor (api, options) {
+  constructor(api, options) {
     this.api = api
     this.options = options
     this.context = options.baseDir
@@ -25,10 +26,11 @@ class MenuSource {
       await this.createSchemasTypes(actions)
       await this.extendSchema(actions)
       await this.createNodes()
+      await this.createContentTypeFields(actions)
     })
   }
 
-  async createSchemasTypes ({addSchemaTypes, addCollection, schema }) {
+  async createSchemasTypes({ addSchemaTypes, addCollection, schema }) {
     this.menuCollection = addCollection(this.options.menuTypeName)
     this.menuLinkCollection = addCollection(this.options.menuLinkTypeName)
     addSchemaTypes([
@@ -64,7 +66,21 @@ class MenuSource {
     ])
   }
 
-  extendSchema({addSchema, getCollection}) {
+  createContentTypeFields({ addSchemaResolvers }) {
+    const fieldResolver = (obj) => this.menuLinkCollection.findNode({ url: obj.path.slice(0, -1) })
+    this.options.contentTypes.forEach(contentType => {
+      addSchemaResolvers({
+        [contentType]: {
+          menuLink: {
+            type: 'MenuLink',
+            resolve: fieldResolver
+          }
+        }
+      })
+    })
+  }
+
+  extendSchema({ addSchema, getCollection }) {
     addSchema(new GraphQLSchema({
       query: new GraphQLObjectType({
         name: 'Query',
@@ -99,17 +115,17 @@ class MenuSource {
       })
       order++
       if (children) {
-        this.createLinks(children, menu, depth+1, menuLink)
+        this.createLinks(children, menu, depth + 1, menuLink)
       }
     }
   }
 
-  async createNodes () {
+  async createNodes() {
     const glob = require('globby')
     const menuFiles = await glob(this.options.path, { cwd: this.context })
     menuFiles.map(menuFile => {
       const origin = path.join(this.context, menuFile)
-      const { id, name, links} = require(origin)
+      const { id, name, links } = require(origin)
       const menu = this.menuCollection.addNode({ id, name })
       this.createLinks(links, menu)
     })
