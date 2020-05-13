@@ -1,4 +1,10 @@
 const path = require('path')
+const {
+  GraphQLSchema,
+  GraphQLObjectType,
+  GraphQLString,
+  GraphQLID
+} = require('gridsome/graphql')
 
 class MenuSource {
   static defaultOptions () {
@@ -17,6 +23,7 @@ class MenuSource {
       : api.context
     api.loadSource(async actions => {
       await this.createSchemasTypes(actions)
+      await this.extendSchema(actions)
       await this.createNodes()
     })
   }
@@ -55,6 +62,28 @@ class MenuSource {
         }
       })
     ])
+  }
+
+  extendSchema({addSchema, getCollection}) {
+    addSchema(new GraphQLSchema({
+      query: new GraphQLObjectType({
+        name: 'Query',
+        fields: {
+          menuLink: {
+            type: 'MenuLink',
+            args: {
+              id: {
+                type: GraphQLID
+              },
+              url: {
+                type: GraphQLString
+              },
+            },
+            resolve: (obj, args) => getCollection('MenuLink').findNode(args)
+          }
+        }
+      })
+    }))
   }
 
   createLinks(links, menu, depth = 0, parent = false) {
